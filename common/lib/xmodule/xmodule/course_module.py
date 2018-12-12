@@ -458,10 +458,7 @@ class CourseFields(object):
     )
     course_image = String(
         display_name=_("Course About Page Image"),
-        help=_(
-            "Edit the name of the course image file. You must upload this file on the Files & Uploads page. "
-            "You can also set the course image on the Settings & Details page."
-        ),
+        help=_("Edit the name of the course image file. You must upload this file on the Files & Uploads page. "),
         scope=Scope.settings,
         # Ensure that courses imported from XML keep their image
         default="images_course_image.jpg"
