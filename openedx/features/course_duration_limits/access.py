@@ -9,6 +9,7 @@ from django.apps import apps
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
+from student.models import CourseEnrollment
 from util.date_utils import DEFAULT_SHORT_DATE_FORMAT, strftime_localized
 
 from course_modes.models import CourseMode
@@ -130,12 +131,30 @@ def register_course_expired_message(request, course):
             )
         )
     else:
-        upgrade_message = _('Your access to this course expires on {expiration_date}. \
-                    {a_open}Upgrade now {sronly_span_open}to retain access past {expiration_date}.\
-                    {span_close}{a_close}{sighted_only_span_open}for unlimited access.{span_close}')
+        enrollment = CourseEnrollment.get_enrollment(request.user, course.id)
+        if enrollment is None:
+            return
+
+        upgrade_deadline = enrollment.upgrade_deadline
+        if upgrade_deadline is None:
+            return
+
+        expiration_message = _('{div_open}{strong_open}Audit Access Expires {expiration_date}{strong_close}{div_close}'
+                               '{div_open}You lose all access to this course, including your progress, on '
+                               '{expiration_date}.{div_close}')
+        upgrade_deadline_message = _('Upgrade by {upgrade_deadline} to get unlimited access to the course as long as '
+                                     'it exists on the site.')
+        upgrade_link = _('{a_open}Upgrade now{sronly_span_open} to retain access past '
+                         '{expiration_date}{span_close}{a_close}')
+
+        full_message = expiration_message
+        if timezone.now() < upgrade_deadline:
+            full_message += ' ' + upgrade_deadline_message
+        full_message += ' ' + upgrade_link
+
         PageLevelMessages.register_info_message(
             request,
-            Text(upgrade_message).format(
+            Text(full_message).format(
                 a_open=HTML('<a href="{upgrade_link}">').format(
                     upgrade_link=verified_upgrade_deadline_link(user=request.user, course=course)
                 ),
@@ -144,5 +163,10 @@ def register_course_expired_message(request, course):
                 span_close=HTML('</span>'),
                 a_close=HTML('</a>'),
                 expiration_date=expiration_date.strftime('%b %-d'),
+                strong_open=HTML('<strong>'),
+                strong_close=HTML('</strong>'),
+                div_open=HTML('<div>'),
+                div_close=HTML('</div>'),
+                upgrade_deadline=upgrade_deadline.strftime('%b %-d')
             )
         )
