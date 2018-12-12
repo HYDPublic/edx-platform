@@ -136,6 +136,9 @@ def register_course_expired_message(request, course):
         upgrade_deadline = enrollment.upgrade_deadline
         if upgrade_deadline is None:
             return
+        now = timezone.now()
+        if now < upgrade_deadline:
+            upgrade_deadline = enrollment.course_upgrade_deadline
 
         expiration_message = _('{strong_open}Audit Access Expires {expiration_date}{strong_close}'
                                '{line_break}You lose all access to this course, including your progress, on '
@@ -144,7 +147,7 @@ def register_course_expired_message(request, course):
                                      'it exists on the site.{a_open}Upgrade now{sronly_span_open} to retain access past '
                                      '{expiration_date}{span_close}{a_close}')
         full_message = expiration_message
-        if timezone.now() < upgrade_deadline:
+        if now < upgrade_deadline:
             full_message += upgrade_deadline_message
 
         PageLevelMessages.register_info_message(

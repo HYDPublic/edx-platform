@@ -35,5 +35,9 @@
   // Need to have sufficient contrast for blue links on blue background
   // Based this on some existing css for this use case
   color: #245269;
+  text-decoration: underline;
   font-weight: bold;
+}
+.alert.alert-info a:hover {
+  color: #003366;
 }

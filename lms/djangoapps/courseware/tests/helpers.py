@@ -362,6 +362,11 @@ def get_expiration_banner_text(user, course):
     upgrade_link = verified_upgrade_deadline_link(user=user, course=course)
     enrollment = CourseEnrollment.get_enrollment(user, course.id)
     upgrade_deadline = enrollment.upgrade_deadline
+    if upgrade_deadline is None:
+        return
+    now = timezone.now()
+    if now < upgrade_deadline:
+        upgrade_deadline = enrollment.course_upgrade_deadline
     bannerText = '<strong>Audit Access Expires Jan 9</strong><br>\
                  You lose all access to this course, including your progress, on {expiration_date}.<br>\
                  Upgrade by {upgrade_deadline} to get unlimited access to the course as long as it exists on the site.\
